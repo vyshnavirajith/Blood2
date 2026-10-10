@@ -197,28 +197,52 @@ const App = {
     },
 
     // Update Top Counters & Stats Cards
-    updateStatsCounters() {
-        const totalDonors = BloodBankData.donors.length;
-        const totalUnits = BloodBankData.stock.reduce((sum, item) => sum + item.units, 0);
-        const pendingReqs = BloodBankData.requests.filter(r => r.status === 'Pending').length;
-        const approvedReqs = BloodBankData.requests.filter(r => r.status === 'Approved').length;
-        const totalHospitals = BloodBankData.hospitals.length;
+    async updateStatsCounters() {
+    const elPending = document.getElementById('statPendingReqs');
+    const elApproved = document.getElementById('statApprovedReqs');    
+    const elTotalDonors = document.getElementById('statTotalDonors');
+    const elTotalUnits = document.getElementById('statTotalUnits');
+    const elTotalHospitals = document.getElementById('statTotalHospitals');
 
-        // Render counts into DOM
-        const elTotalDonors = document.getElementById('statTotalDonors');
-        const elTotalUnits = document.getElementById('statTotalUnits');
-        const elPendingReqs = document.getElementById('statPendingReqs');
-        const elApprovedReqs = document.getElementById('statApprovedReqs');
-        const elTotalHospitals = document.getElementById('statTotalHospitals');
-        const elNavPendingBadge = document.getElementById('navPendingBadge');
+    try {
+        const response = await fetch(
+            'http://localhost:5000/api/dashboard-stats'
+        );
 
-        if (elTotalDonors) elTotalDonors.textContent = totalDonors;
-        if (elTotalUnits) elTotalUnits.textContent = `${totalUnits} Units`;
-        if (elPendingReqs) elPendingReqs.textContent = pendingReqs;
-        if (elApprovedReqs) elApprovedReqs.textContent = approvedReqs;
-        if (elTotalHospitals) elTotalHospitals.textContent = totalHospitals;
-        if (elNavPendingBadge) elNavPendingBadge.textContent = pendingReqs;
-    },
+        if (!response.ok) {
+            throw new Error('Failed to load dashboard statistics');
+        }
+
+        const stats = await response.json();
+
+        if (elTotalDonors) {
+            elTotalDonors.textContent = stats.totalDonors;
+        }
+
+        if (elTotalUnits) {
+            elTotalUnits.textContent = `${stats.totalUnits} Units`;
+        }
+
+        if (elTotalHospitals) {
+            elTotalHospitals.textContent = stats.totalHospitals;
+        }
+        if (elPending) {
+    elPending.textContent = stats.pendingRequests;
+}
+
+if (elApproved) {
+    elApproved.textContent = stats.approvedRequests;
+}
+
+    } catch (error) {
+        console.error('Dashboard statistics error:', error);
+        this.showToast(
+            'Dashboard Error',
+            'Could not load live statistics from the database.',
+            'danger'
+        );
+    }
+},
 
     // Render All Views
     renderAllViews() {
@@ -859,6 +883,7 @@ async saveDonorForm() {
                 result.error || result.message || 'Database operation failed'
             );
         }
+        await this.updateStatsCounters();
 
         if (editId) {
 
@@ -1253,6 +1278,8 @@ async saveRecipientForm() {
         }
 
         await this.renderRecipientsTable();
+        await this.updateStatsCounters();
+
 
         const modalEl = document.getElementById('recipientModal');
         const modal = bootstrap.Modal.getInstance(modalEl);
@@ -1319,108 +1346,249 @@ async saveRecipientForm() {
 },
 
     // 4. Render Blood Requests Table
-    renderRequestsTable(filterCategory) {
+    async renderRequestsTable(filterCategory) {
         const tbody = document.getElementById('requestsTableBody');
         if (!tbody) return;
 
-        let filtered = BloodBankData.requests;
-        if (filterCategory && filterCategory !== 'All') {
-            if (filterCategory === 'Pending' || filterCategory === 'Approved' || filterCategory === 'Rejected') {
-                filtered = BloodBankData.requests.filter(r => r.status === filterCategory);
-            } else if (filterCategory === 'Emergency' || filterCategory === 'High Priority') {
-                const priorityKey = filterCategory === 'Emergency' ? 'Emergency' : 'High';
-                filtered = BloodBankData.requests.filter(r => r.priority === priorityKey);
-            }
-        }
+        try {
+            const response = await fetch(
+                'http://localhost:5000/api/requests'
+            );
 
-        if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4 text-muted">No blood requests match filter.</td></tr>`;
-            return;
-        }
-
-        let html = '';
-        filtered.forEach(r => {
-            let priorityBadge = `<span class="badge-soft badge-soft-info">${r.priority}</span>`;
-            if (r.priority === 'Emergency') {
-                priorityBadge = `<span class="badge-soft badge-soft-danger pulse-danger"><i class="fa-solid fa-bolt"></i> Emergency</span>`;
-            } else if (r.priority === 'High') {
-                priorityBadge = `<span class="badge-soft badge-soft-warning">High</span>`;
+            if (!response.ok) {
+                throw new Error('Failed to load blood requests');
             }
 
-            let statusBadge = `<span class="badge-soft badge-soft-warning">Pending</span>`;
-            if (r.status === 'Approved') statusBadge = `<span class="badge-soft badge-soft-success"><i class="fa-solid fa-check"></i> Approved</span>`;
-            if (r.status === 'Rejected') statusBadge = `<span class="badge-soft badge-soft-danger"><i class="fa-solid fa-xmark"></i> Rejected</span>`;
+            const requests = await response.json();
 
-            let actionBtns = '';
-            if (r.status === 'Pending') {
-                actionBtns = `
-                    <button class="btn btn-sm btn-success text-white" onclick="App.approveRequest('${r.id}')" title="Approve & Allocate">
-                        <i class="fa-solid fa-check"></i> Approve
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger" onclick="App.rejectRequest('${r.id}')" title="Reject">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+            // Update local data so other existing features can use it.
+            BloodBankData.requests = requests.map(r => ({
+                id: String(r.request_id),
+                recipient: r.recipient_name,
+                hospital: r.hospital_name,
+                bloodGroup: r.blood_group_code,
+                units: Number(r.units_needed),
+                priority: r.priority,
+                date: r.request_date,
+                status: r.status
+            }));
+
+            let filtered = BloodBankData.requests;
+
+            if (filterCategory && filterCategory !== 'All') {
+                if (['Pending', 'Approved', 'Rejected'].includes(filterCategory)) {
+                    filtered = filtered.filter(
+                        r => r.status === filterCategory
+                    );
+                } else if (
+                    filterCategory === 'Emergency' ||
+                    filterCategory === 'High Priority'
+                ) {
+                    const priorityKey =
+                        filterCategory === 'Emergency' ? 'Emergency' : 'High';
+
+                    filtered = filtered.filter(
+                        r => r.priority === priorityKey
+                    );
+                }
+            }
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="text-center py-4 text-muted">
+                            No blood requests match filter.
+                        </td>
+                    </tr>
                 `;
-            } else {
-                actionBtns = `<span class="text-muted fs-7">Processed</span>`;
+                return;
             }
 
-            html += `
+            let html = '';
+
+            filtered.forEach(r => {
+                let priorityBadge =
+                    `<span class="badge-soft badge-soft-info">${r.priority}</span>`;
+
+                if (r.priority === 'Emergency') {
+                    priorityBadge =
+                        `<span class="badge-soft badge-soft-danger pulse-danger">
+                            <i class="fa-solid fa-bolt"></i> Emergency
+                        </span>`;
+                } else if (r.priority === 'High') {
+                    priorityBadge =
+                        `<span class="badge-soft badge-soft-warning">High</span>`;
+                }
+
+                let statusBadge =
+                    `<span class="badge-soft badge-soft-warning">Pending</span>`;
+
+                if (r.status === 'Approved') {
+                    statusBadge =
+                        `<span class="badge-soft badge-soft-success">
+                            <i class="fa-solid fa-check"></i> Approved
+                        </span>`;
+                } else if (r.status === 'Rejected') {
+                    statusBadge =
+                        `<span class="badge-soft badge-soft-danger">
+                            <i class="fa-solid fa-xmark"></i> Rejected
+                        </span>`;
+                }
+
+                let actionBtns = '';
+
+                if (r.status === 'Pending') {
+                    actionBtns = `
+                        <button
+                            class="btn btn-sm btn-success text-white"
+                            onclick="App.approveRequest('${r.id}')"
+                            title="Approve request">
+                            <i class="fa-solid fa-check"></i> Approve
+                        </button>
+                        <button
+                            class="btn btn-sm btn-outline-danger"
+                            onclick="App.rejectRequest('${r.id}')"
+                            title="Reject request">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    `;
+                } else {
+                    actionBtns =
+                        `<span class="text-muted fs-7">Processed</span>`;
+                }
+
+                html += `
+                    <tr>
+                        <td><strong>${r.id}</strong></td>
+                        <td class="fw-bold">${r.recipient ?? ''}</td>
+                        <td>${r.hospital ?? ''}</td>
+                        <td>
+                            <span class="badge-blood-group">${r.bloodGroup}</span>
+                        </td>
+                        <td>
+                            <strong class="text-danger">${r.units} Units</strong>
+                        </td>
+                        <td>${priorityBadge}</td>
+                        <td class="fs-7 text-muted">${r.date ?? ''}</td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div class="d-flex gap-1 align-items-center">
+                                ${actionBtns}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+
+        } catch (error) {
+            console.error('Blood requests error:', error);
+
+            tbody.innerHTML = `
                 <tr>
-                    <td><strong>${r.id}</strong></td>
-                    <td class="fw-bold">${r.recipient}</td>
-                    <td>${r.hospital}</td>
-                    <td><span class="badge-blood-group">${r.bloodGroup}</span></td>
-                    <td><strong class="text-danger">${r.units} Units</strong></td>
-                    <td>${priorityBadge}</td>
-                    <td class="fs-7 text-muted">${r.date}</td>
-                    <td>${statusBadge}</td>
-                    <td>
-                        <div class="d-flex gap-1 align-items-center">
-                            ${actionBtns}
-                        </div>
+                    <td colspan="9" class="text-center py-4 text-danger">
+                        Could not load blood requests. Check the backend server.
                     </td>
                 </tr>
             `;
-        });
-
-        tbody.innerHTML = html;
+        }
     },
 
-    approveRequest(reqId) {
-        const req = BloodBankData.requests.find(r => r.id === reqId);
-        if (!req) return;
+    // Approve a blood request in PostgreSQL
+    async approveRequest(reqId) {
+        try {
+            const response = await fetch(
+                `http://localhost:5000/api/requests/${encodeURIComponent(reqId)}/status`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        status: 'Approved'
+                    })
+                }
+            );
 
-        // Check stock availability
-        const stockItem = BloodBankData.stock.find(s => s.group === req.bloodGroup);
-        if (stockItem && stockItem.units < req.units) {
-            this.showToast('Stock Deficit Alert', `Insufficient units of ${req.bloodGroup}. Available: ${stockItem.units}, Required: ${req.units}`, 'danger');
-            return;
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || 'Failed to approve request'
+                );
+            }
+
+            await this.renderRequestsTable('All');
+            await this.updateStatsCounters();
+
+            if (typeof this.renderLatestDashboardRequests === 'function') {
+                await this.renderLatestDashboardRequests();
+            }
+
+            this.showToast(
+                'Request Approved',
+                `Blood request ${reqId} was approved and saved to the database.`,
+                'success'
+            );
+
+        } catch (error) {
+            console.error('Approve request error:', error);
+
+            this.showToast(
+                'Approval Failed',
+                error.message || 'Could not approve the request.',
+                'danger'
+            );
         }
-
-        // Deduct stock and approve
-        if (stockItem) {
-            stockItem.units -= req.units;
-            stockItem.lastUpdated = new Date().toLocaleString();
-        }
-
-        req.status = 'Approved';
-        this.renderRequestsTable('All');
-        this.renderStockCards();
-        this.updateStatsCounters();
-        ChartManager.initDashboardBloodGroupChart();
-
-        this.showToast('Request Approved', `Approved ${req.units} units of ${req.bloodGroup} for ${req.hospital}`, 'success');
     },
 
-    rejectRequest(reqId) {
-        const req = BloodBankData.requests.find(r => r.id === reqId);
-        if (!req) return;
+    // Reject a blood request in PostgreSQL
+    async rejectRequest(reqId) {
+        try {
+            const response = await fetch(
+                `http://localhost:5000/api/requests/${encodeURIComponent(reqId)}/status`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        status: 'Rejected'
+                    })
+                }
+            );
 
-        req.status = 'Rejected';
-        this.renderRequestsTable('All');
-        this.updateStatsCounters();
-        this.showToast('Request Rejected', `Blood Request ${reqId} set to Rejected`, 'warning');
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    result.message || 'Failed to reject request'
+                );
+            }
+
+            await this.renderRequestsTable('All');
+            await this.updateStatsCounters();
+
+            if (typeof this.renderLatestDashboardRequests === 'function') {
+                await this.renderLatestDashboardRequests();
+            }
+
+            this.showToast(
+                'Request Rejected',
+                `Blood request ${reqId} was rejected and saved to the database.`,
+                'warning'
+            );
+
+        } catch (error) {
+            console.error('Reject request error:', error);
+
+            this.showToast(
+                'Rejection Failed',
+                error.message || 'Could not reject the request.',
+                'danger'
+            );
+        }
     },
 
     // 5. Render Donation History View
@@ -1569,28 +1737,76 @@ async saveRecipientForm() {
         container.innerHTML = html;
     },
 
+   
     // 8. Render Latest Dashboard Requests Table
-    renderLatestDashboardRequests() {
+    async renderLatestDashboardRequests() {
         const tbody = document.getElementById('dashboardRequestsTableBody');
         if (!tbody) return;
 
-        let html = '';
-        BloodBankData.requests.slice(0, 4).forEach(r => {
-            let badge = `<span class="badge-soft badge-soft-warning">Pending</span>`;
-            if (r.status === 'Approved') badge = `<span class="badge-soft badge-soft-success">Approved</span>`;
+        try {
+            const response = await fetch(
+                'http://localhost:5000/api/latest-blood-requests'
+            );
 
-            html += `
+            if (!response.ok) {
+                throw new Error('Failed to load latest blood requests');
+            }
+
+            const requests = await response.json();
+
+            if (requests.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">No blood requests found.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            requests.forEach(r => {
+                let badge = '';
+
+                if (r.status === 'Pending') {
+                    badge = `<span class="badge-soft badge-soft-warning">Pending</span>`;
+                } else if (r.status === 'Approved') {
+                    badge = `<span class="badge-soft badge-soft-success">Approved</span>`;
+                } else if (r.status === 'Rejected') {
+                    badge = `<span class="badge-soft badge-soft-danger">Rejected</span>`;
+                } else {
+                    badge = `<span class="badge-soft">${r.status}</span>`;
+                }
+
+                html += `
+                    <tr>
+                        <td><strong>${r.request_id}</strong></td>
+                        <td>${r.recipient_name}</td>
+                        <td>
+                            <span class="badge-blood-group">
+                                ${r.blood_group_code}
+                            </span>
+                        </td>
+                        <td>${r.units_needed} Units</td>
+                        <td>${r.hospital_name}</td>
+                        <td>${badge}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+
+        } catch (error) {
+            console.error('Latest blood requests error:', error);
+
+            tbody.innerHTML = `
                 <tr>
-                    <td><strong>${r.id}</strong></td>
-                    <td>${r.recipient}</td>
-                    <td><span class="badge-blood-group">${r.bloodGroup}</span></td>
-                    <td>${r.units} Units</td>
-                    <td>${r.hospital}</td>
-                    <td>${badge}</td>
+                    <td colspan="6">
+                        Could not load blood requests. Please check the backend.
+                    </td>
                 </tr>
             `;
-        });
-        tbody.innerHTML = html;
+        }
     },
 
     // Reports Export Simulation Triggers
