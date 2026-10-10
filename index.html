@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LifePulse - Blood Bank Management Admin Dashboard</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome 6 CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- 1. LOGIN PAGE VIEW -->
+    <div id="login-view">
+        <div class="login-card">
+            <div class="login-banner">
+                <div>
+                    <div class="d-flex align-items-center gap-3 mb-4">
+                        <div class="brand-icon-wrapper">
+                            <i class="fa-solid fa-droplet fs-3"></i>
+                        </div>
+                        <h3 class="fw-bold m-0 text-white">LifePulse</h3>
+                    </div>
+                    <h2 class="fw-extrabold text-white mb-3">Blood Bank Management System</h2>
+                    <p class="text-white-50">Streamlining blood inventory, emergency requests, donor registration, and hospital logistics in real-time.</p>
+                </div>
+                <div class="text-white-50 fs-7">
+                    <i class="fa-solid fa-shield-halved me-1 text-danger"></i> HIPAA Compliant & Secure Medical Portal
+                </div>
+            </div>
+
+            <div class="login-form-container">
+                <div class="mb-4">
+                    <h3 class="fw-bold mb-1">Staff Sign In</h3>
+                    <p class="text-muted fs-7">Enter your credentials to access the blood bank dashboard.</p>
+                </div>
+
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold fs-7">Username / Employee ID</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-user-doctor text-muted"></i></span>
+                            <input type="text" class="form-control" id="loginUsername" placeholder="e.g. admin@lifepulse.org" value="admin@lifepulse.org" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold fs-7">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-lock text-muted"></i></span>
+                            <input type="password" class="form-control" id="loginPassword" value="password123" required>
+                            <button class="btn btn-outline-secondary" type="button" id="togglePasswordBtn">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="form-check fs-7">
+                            <input class="form-check-input" type="checkbox" id="rememberMeCheck" checked>
+                            <label class="form-check-label text-muted" for="rememberMeCheck">Remember Me</label>
+                        </div>
+                        <a href="#" class="fs-7 text-danger fw-semibold" data-bs-toggle="modal" data-bs-target="#forgotPasswordModal">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit" id="btnLoginSubmit" class="btn btn-danger w-100 py-2.5 fw-bold mb-3 shadow-sm">
+                        <i class="fa-solid fa-right-to-bracket me-2"></i> Sign In to Dashboard
+                    </button>
+
+                    <div class="text-center">
+                        <span class="text-muted fs-7">Need demo access? <a href="#" class="text-danger fw-bold" onclick="App.handleLogin()">Instant Demo Login</a></span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN DASHBOARD APP WRAPPER -->
+    <div id="app-wrapper" style="display: none;">
+
+        <!-- LEFT SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="#" class="sidebar-brand" data-view-target="dashboard-view">
+                    <div class="brand-icon-wrapper">
+                        <i class="fa-solid fa-droplet"></i>
+                    </div>
+                    <span>LifePulse <span class="fs-7 text-danger fw-bold">ADMIN</span></span>
+                </a>
+            </div>
+
+            <div class="sidebar-menu">
+                <div class="menu-category">MAIN MENU</div>
+                <div class="nav-link-item active" data-view-target="dashboard-view">
+                    <div>
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Dashboard</span>
+                    </div>
+                </div>
+
+                <div class="menu-category">INVENTORY & PEOPLE</div>
+                <div class="nav-link-item" data-view-target="donors-view">
+                    <div>
+                        <i class="fa-solid fa-user-group"></i>
+                        <span>Donor Management</span>
+                    </div>
+                </div>
+
+                <div class="nav-link-item" data-view-target="recipients-view">
+                    <div>
+                        <i class="fa-solid fa-hospital-user"></i>
+                        <span>Recipient Management</span>
+                    </div>
+                </div>
+
+                <div class="nav-link-item" data-view-target="stock-view">
+                    <div>
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                        <span>Blood Stock</span>
+                    </div>
+                    <span class="menu-badge bg-danger text-white">8 Groups</span>
+                </div>
+
+                <div class="nav-link-item" data-view-target="requests-view">
+                    <div>
+                        <i class="fa-solid fa-hand-holding-medical"></i>
+                        <span>Blood Requests</span>
+                    </div>
+                    <span class="menu-badge bg-warning text-dark" id="navPendingBadge">2</span>
+                </div>
+
+                <div class="nav-link-item" data-view-target="donations-view">
+                    <div>
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>Donation History</span>
+                    </div>
+                </div>
+
+                <div class="menu-category">OPERATIONS</div>
+                <div class="nav-link-item" data-view-target="hospitals-view">
+                    <div>
+                        <i class="fa-solid fa-hospital"></i>
+                        <span>Hospitals</span>
+                    </div>
+                </div>
+
+                <div class="nav-link-item" data-view-target="reports-view">
+                    <div>
+                        <i class="fa-solid fa-file-invoice"></i>
+                        <span>Reports & Analytics</span>
+                    </div>
+                </div>
+
+                <div class="nav-link-item" data-view-target="settings-view">
+                    <div>
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>Settings & Profile</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-chip">
+                    <img src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80" class="user-avatar" alt="User">
+                    <div class="user-info">
+                        <div class="user-name">Dr. Alexander Wright</div>
+                        <div class="user-role">Blood Bank Manager</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN WRAPPER -->
+        <div class="main-wrapper">
+
+            <!-- TOP NAVBAR -->
+            <header class="top-navbar">
+                <div class="navbar-left">
+                    <button class="btn-toggle-sidebar" id="btnToggleSidebar">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+
+                    <div class="global-search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Search donors, requests, stock...">
+                    </div>
+                </div>
+
+                <div class="navbar-right">
+                    <!-- Dark Mode Toggle -->
+                    <button class="nav-icon-btn btn-dark-mode-toggle" title="Toggle Dark/Light Theme">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+
+                    <!-- Notifications Dropdown -->
+                    <div class="dropdown">
+                        <button class="nav-icon-btn" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fa-solid fa-bell"></i>
+                            <span class="notification-badge">3</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2" style="width: 320px;">
+                            <li class="dropdown-header fw-bold text-dark d-flex justify-content-between align-items-center mb-1">
+                                <span>Notifications</span>
+                                <span class="badge bg-danger rounded-pill">3 New</span>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2" href="#">
+                                    <div class="fw-bold fs-7 text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> Low Stock Alert</div>
+                                    <div class="fs-7 text-muted">AB- dropped below threshold (8 units left).</div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2" href="#">
+                                    <div class="fw-bold fs-7 text-dark"><i class="fa-solid fa-bolt text-warning me-1"></i> Emergency Request</div>
+                                    <div class="fs-7 text-muted">St. Jude Hospital requested 3 units of O-.</div>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item rounded-2 py-2" href="#">
+                                    <div class="fw-bold fs-7 text-success"><i class="fa-solid fa-circle-check me-1"></i> Camp Drive Completed</div>
+                                    <div class="fs-7 text-muted">Corporate LifeSaver Drive collected 45 units.</div>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="dropdown">
+                        <a href="#" class="d-flex align-items-center gap-2 text-decoration-none" data-bs-toggle="dropdown">
+                            <img src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80" width="38" height="38" class="rounded-circle border border-2 border-danger" alt="User">
+                            <span class="fw-bold text-dark d-none d-md-inline fs-7">Dr. Wright <i class="fa-solid fa-chevron-down ms-1 text-muted fs-8"></i></span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg p-2">
+                            <li><a class="dropdown-item" href="#" data-view-target="settings-view"><i class="fa-solid fa-user me-2 text-muted"></i> My Profile</a></li>
+                            <li><a class="dropdown-item" href="#" data-view-target="settings-view"><i class="fa-solid fa-gear me-2 text-muted"></i> Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger btn-logout" href="#"><i class="fa-solid fa-right-from-bracket me-2"></i> Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- CONTENT BODY -->
+            <main class="content-body">
+
+                <!-- 1. DASHBOARD VIEW -->
+                <section id="dashboard-view" class="view-section active-view">
+                    <div class="page-header-container">
+                        <div>
+                            <h2 class="page-title">Admin Dashboard</h2>
+                            <div class="breadcrumb-nav">
+                                <a href="#">Home</a> <i class="fa-solid fa-chevron-right mx-1 fs-8"></i> <span>Overview</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-danger shadow-sm fw-semibold" onclick="App.triggerExport('pdf')">
+                                <i class="fa-solid fa-file-pdf me-1"></i> Quick Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stat Cards Row -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-xl-2 col-md-4 col-6">
+                            <div class="card-custom stat-card">
+                                <div class="stat-header">
+                                    <span class="stat-label">Total Donors</span>
+                                    <div class="stat-icon bg-light text-danger"><i class="fa-solid fa-users"></i></div>
+                                </div>
+                                <div class="stat-value" id="statTotalDonors">1,482</div>
+                                <div class="stat-footer text-success"><i class="fa-solid fa-arrow-up"></i> +12% this month</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-2 col-md-4 col-6">
+                            <div class="card-custom stat-card">
+                                <div class="stat-header">
+                                    <span class="stat-label">Blood Units</span>
+                                    <div class="stat-icon bg-danger-subtle text-danger"><i class="fa-solid fa-vial"></i></div>
+                                </div>
+                                <div class="stat-value" id="statTotalUnits">845</div>
+                                <div class="stat-footer text-muted">Across 8 groups</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-2 col-md-4 col-6">
+                            <div class="card-custom stat-card">
+                                <div class="stat-header">
+                                    <span class="stat-label">Pending Requests</span>
+                                    <div class="stat-icon bg-warning-subtle text-warning"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                                </div>
+                                <div class="stat-value" id="statPendingReqs">18</div>
+                                <div class="stat-footer text-danger"><i class="fa-solid fa-bolt"></i> 2 Emergency</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-2 col-md-4 col-6">
+                            <div class="card-custom stat-card">
+                                <div class="stat-header">
+                                    <span class="stat-label">Approved Requests</span>
+                                    <div class="stat-icon bg-success-subtle text-success"><i class="fa-solid fa-circle-check"></i></div>
+                                </div>
+                                <div class="stat-value" id="statApprovedReqs">342</div>
+                                <div class="stat-footer text-success">Fulfilled successfully</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-2 col-md-4 col-6">
+                            <div class="card-custom stat-card">
+                                <div class="stat-header">
+                                    <span class="stat-label">Hospitals</span>
+                                    <div class="stat-icon bg-info-subtle text-info"><i class="fa-solid fa-hospital"></i></div>
+                                </div>
+                                <div class="stat-value" id="statTotalHospitals">28</div>
+                                <div class="stat-footer text-muted">Partner Network</div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-2 col-md-4 col-6">
+                            <div class="card-custom stat-card">
+                                <div class="stat-header">
+                                    <span class="stat-label">Monthly Drive</span>
+                                    <div class="stat-icon bg-primary-subtle text-primary"><i class="fa-solid fa-truck-medical"></i></div>
+                                </div>
+                                <div class="stat-value">124</div>
+                                <div class="stat-footer text-success">+8% vs June</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions Bar -->
+                    <div class="card-custom mb-4 p-3 bg-light">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <span class="fw-bold text-dark fs-7"><i class="fa-solid fa-bolt text-warning me-1"></i> Quick Action Tools:</span>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button class="btn btn-sm btn-danger shadow-sm fw-bold" onclick="App.openAddDonorModal()">
+                                    <i class="fa-solid fa-user-plus me-1"></i> Add Donor
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger fw-bold" onclick="App.switchView('stock-view')">
+                                    <i class="fa-solid fa-boxes-stacked me-1"></i> Add Blood Stock
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary fw-bold" onclick="App.switchView('requests-view')">
+                                    <i class="fa-solid fa-check-double me-1"></i> Approve Requests
+                                </button>
+                                <button class="btn btn-sm btn-outline-dark fw-bold" onclick="App.switchView('reports-view')">
+                                    <i class="fa-solid fa-chart-pie me-1"></i> Generate Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 1: Low Stock Alert & Availability Chart -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-8">
+                            <div class="card-custom">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h5 class="card-title fw-bold m-0"><i class="fa-solid fa-chart-column text-danger me-2"></i>Blood Group Availability</h5>
+                                    <span class="fs-7 text-muted">Real-time Stock Inventory</span>
+                                </div>
+                                <div style="height: 280px;">
+                                    <canvas id="dashboardBloodGroupChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="card-custom border-danger">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h5 class="card-title fw-bold text-danger m-0"><i class="fa-solid fa-triangle-exclamation me-2"></i>Low Stock Alerts</h5>
+                                    <span class="badge bg-danger rounded-pill">Critical</span>
+                                </div>
+                                <div class="p-3 bg-danger-subtle rounded-3 mb-3">
+                                    <div class="fw-bold text-danger mb-1">AB- Blood Group Critical</div>
+                                    <div class="fs-7 text-dark">Current Stock: <strong>8 Units</strong> (Min Threshold: 15)</div>
+                                    <div class="mt-2">
+                                        <button class="btn btn-xs btn-danger fw-bold" onclick="App.switchView('stock-view')">Replenish Now</button>
+                                    </div>
+                                </div>
+                                <div class="p-3 bg-warning-subtle rounded-3">
+                                    <div class="fw-bold text-warning-emphasis mb-1">A- Blood Group Warning</div>
+                                    <div class="fs-7 text-dark">Current Stock: <strong>12 Units</strong> (Min Threshold: 15)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Timeline & Latest Requests -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-7">
+                            <div class="card-custom">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h5 class="card-title fw-bold m-0"><i class="fa-solid fa-list-check text-danger me-2"></i>Latest Blood Requests</h5>
+                                    <a href="#" class="fs-7 text-danger fw-semibold" onclick="App.switchView('requests-view')">View All Requests</a>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-custom">
+                                        <thead>
+                                            <tr>
+                                                <th>Req ID</th>
+                                                <th>Recipient</th>
+                                                <th>Group</th>
+                                                <th>Units</th>
+                                                <th>Hospital</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dashboardRequestsTableBody">
+                                            <!-- Dynamic via JS -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-5">
+                            <div class="card-custom">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <h5 class="card-title fw-bold m-0"><i class="fa-solid fa-clock-rotate-left text-danger me-2"></i>Recent System Activity</h5>
+                                    <span class="fs-7 text-muted">Audit Log</span>
+                                </div>
+                                <div class="timeline" id="recentActivitiesContainer">
+                                    <!-- Dynamic via JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. DONOR MANAGEMENT VIEW -->
+                <section id="donors-view" class="view-section">
+                    <div class="page-header-container">
+                        <div>
+                            <h2 class="page-title">Donor Management</h2>
+                            <div class="breadcrumb-nav">
+                                <a href="#">Home</a> <i class="fa-solid fa-chevron-right mx-1 fs-8"></i> <span>Donors</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger fw-bold shadow-sm" onclick="App.openAddDonorModal()">
+                            <i class="fa-solid fa-plus me-1"></i> Add New Donor
+                        </button>
+                    </div>
+
+                    <!-- Search & Filters Toolbar -->
+                    <div class="card-custom mb-4">
+                        <div class="row g-3">
+                            <div class="col-lg-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                    <input type="text" id="donorSearchInput" class="form-control" placeholder="Search donor name, ID, phone...">
+                                </div>
+                            </div>
+                            <div class="col-lg-2">
+                                <select id="donorBgFilter" class="form-select">
+                                    <option value="">All Blood Groups</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-3">
+                                <select id="donorCityFilter" class="form-select">
+                                    <option value="">All Cities</option>
+                                    <option value="New York">New York</option>
+                                    <option value="Chicago">Chicago</option>
+                                    <option value="San Francisco">San Francisco</option>
+                                    <option value="Boston">Boston</option>
+                                    <option value="Los Angeles">Los Angeles</option>
+                                    <option value="Seattle">Seattle</option>
+                                </select>
+                            </div>
+                            <div class="col-lg-3">
+                                <select id="donorGenderFilter" class="form-select">
+                                    <option value="">All Genders</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Donors Table -->
+                    <div class="table-custom-wrapper">
+                        <div class="table-responsive">
+                            <table class="table table-custom align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Donor ID</th>
+                                        <th>Donor Profile</th>
+                                        <th>Age / Gender</th>
+                                        <th>Blood Group</th>
+                                        <th>Phone</th>
+                                        <th>City</th>
+                                        <th>Last Donation</th>
+                                        <th>Eligibility</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="donorsTableBody">
+                                    <!-- Rendered via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Floating Action Button -->
+                    <button class="fab-btn" onclick="App.openAddDonorModal()" title="Add Donor">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </button>
+                </section>
+
+                <!-- 3. RECIPIENT MANAGEMENT VIEW -->
+                <section id="recipients-view" class="view-section">
+                    <div class="page-header-container">
+                        <div>
+                            <h2 class="page-title">Recipient Management</h2>
+                            <div class="breadcrumb-nav">
+                                <a href="#">Home</a> <i class="fa-solid fa-chevron-right mx-1 fs-8"></i> <span>Recipients</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger fw-bold shadow-sm" onclick="App.openAddRecipientModal()">
+                            <i class="fa-solid fa-user-injured me-1"></i> Register Recipient
+                        </button>
+                    </div>
+
+                    <div class="card-custom mb-4">
+                        <div class="row g-3">
+                            <div class="col-lg-6">
+                                <input type="text" id="recipientSearchInput" class="form-control" placeholder="Search recipient name, hospital...">
+                            </div>
+                            <div class="col-lg-4">
+                                <select id="recipientBgFilter" class="form-select">
+                                    <option value="">Filter by Blood Group Needed</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-custom-wrapper">
+                        <div class="table-responsive">
+                            <table class="table table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Recipient ID</th>
+                                        <th>Full Name</th>
+                                        <th>Age / Gender</th>
+                                        <th>Group Needed</th>
+                                        <th>Hospital</th>
+                                        <th>Attending Doctor</th>
+                                        <th>Units</th>
+                                        <th>Priority</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recipientsTableBody">
+                                    <!-- Rendered via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. BLOOD STOCK VIEW -->
+                <section id="stock-view" class="view-section">
+                    <div class="page-header-container">
+                        <div>
+                            <h2 class="page-title">Blood Stock Management</h2>
+                            <div class="breadcrumb-nav">
+                                <a href="#">Home</a> <i class="fa-solid fa-chevron-right mx-1 fs-8"></i> <span>Inventory Cards</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" id="stockCardsContainer">
+                        <!-- Rendered via JS -->
+                    </div>
+                </section>
+
+                <!-- 5. BLOOD REQUESTS VIEW -->
+                <section id="requests-view" class="view-section">
+                    <div class="page-header-container">
+                        <div>
+                            <h2 class="page-title">Blood Requests Management</h2>
+                            <div class="breadcrumb-nav">
+                                <a href="#">Home</a> <i class="fa-solid fa-chevron-right mx-1 fs-8"></i> <span>Requests</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-custom mb-4 p-2">
+                        <div class="d-flex gap-2 flex-wrap" id="requestStatusTabs">
+                            <button class="btn btn-sm btn-primary active" data-filter="All">All Requests</button>
+                            <button class="btn btn-sm btn-outline-secondary" data-filter="Pending">Pending</button>
+                            <button class="btn btn-sm btn-outline-secondary" data-filter="Approved">Approved</button>
+                            <button class="btn btn-sm btn-outline-secondary" data-filter="Rejected">Rejected</button>
+                            <button class="btn btn-sm btn-outline-secondary" data-filter="Emergency">Emergency</button>
+                            <button class="btn btn-sm btn-outline-secondary" data-filter="High Priority">High Priority</button>
+                        </div>
+                    </div>
+
+                    <div class="table-custom-wrapper">
+                        <div class="table-responsive">
+                            <table class="table table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Request ID</th>
+                                        <th>Recipient</th>
+                                        <th>Hospital</th>
+                                        <th>Blood Group</th>
+                                        <th>Units Needed</th>
+                                        <th>Priority</th>
+                                        <th>Date & Time</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="requestsTableBody">
+                                    <!-- Rendered via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 6. DONATION HISTORY VIEW -->
+                <section id="donations-view" class="view-section">
+                    <div class="page-header-container">
+                        <div>
+                            <h2 class="page-title">Donation History & Analytics</h2>
+                            <div class="breadcrumb-nav">
+                                <a href="#">Home</a> <i class="fa-solid fa-chevron-right mx-1 fs-8"></i> <span>Donations</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-custom mb-4">
+                        <h5 class="fw-bold mb-3"><i class="fa-solid fa-chart-line text-success me-2"></i>Weekly Units Collection Trend</h5>
+                        <div style="height: 220px;">
+                            <canvas id="donationsTrendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="table-custom-wrapper">
+                        <div class="table-responsive">
+                            <table class="table table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Donation ID</th>
+                                        <th>Donor Name</th>
+                                        <th>Blood Group</th>
+                                        <th>Units Donated</th>
+                                        <th>Donation Date</th>
+                                        <th>Donation Camp / Center</th>
+                                        <th>Destination Reserve</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="donationsTableBody">
+                                    <!-- Rendered via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 7. HOSPITAL MANAGEMENT VIEW -->
+                <section id="hospitals-view" class="view-section">
+                    <div class="page-header-container">
+                        <div>
+                            <h2 class="page-title">Hospital Management</h2>
+                            <div class="breadcrumb-nav">
+                                <a href="#">Home</a> <i class="fa-solid fa-chevron-right mx-1 fs-8"></i> <span>Network Hospitals</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-danger fw-bold shadow-sm" onclick="App.openAddHospitalModal()">
+                            <i class="fa-solid fa-hospital-user me-1"></i> Add Hospital Partner
+                        </button>
+                    </div>
+
+                    <div class="row" id="hospitalsContainer">
+                        <!-- Rendered via JS -->
+                    </div>
+                </section>
+
+                <!-- 8. REPORTS & ANALYTICS VIEW -->
+                <section id="reports-view" class="view-section">
+                    <div class="page-header-container">
+                        <div>
+                            <h2 class="page-title">Reports & Analytics</h2>
+                            <div class="breadcrumb-nav">
+                                <a href="#">Home</a> <i class="fa-solid fa-chevron-right mx-1 fs-8"></i> <span>Analytics</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-danger btn-sm" onclick="App.triggerExport('pdf')"><i class="fa-solid fa-file-pdf me-1"></i> Export PDF</button>
+                            <button class="btn btn-outline-success btn-sm" onclick="App.triggerExport('excel')"><i class="fa-solid fa-file-excel me-1"></i> Export Excel</button>
+                            <button class="btn btn-outline-secondary btn-sm" onclick="App.triggerExport('csv')"><i class="fa-solid fa-file-csv me-1"></i> CSV</button>
+                            <button class="btn btn-outline-dark btn-sm" onclick="window.print()"><i class="fa-solid fa-print me-1"></i> Print</button>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-6">
+                            <div class="card-custom">
+                                <h5 class="fw-bold mb-3">Monthly Donations vs Requests</h5>
+                                <div style="height: 260px;">
+                                    <canvas id="reportsMonthlyChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="card-custom">
+                                <h5 class="fw-bold mb-3">Blood Group Stock Distribution</h5>
+                                <div style="height: 260px;">
+                                    <canvas id="reportsDistributionChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="card-custom">
+                                <h5 class="fw-bold mb-3">Request Trends by Urgency</h5>
+                                <div style="height: 260px;">
+                                    <canvas id="reportsUrgencyChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="card-custom">
+                                <h5 class="fw-bold mb-3">Hospital Dispatch Breakdown</h5>
+                                <div style="height: 260px;">
+                                    <canvas id="reportsHospitalChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 9. SETTINGS & PROFILE VIEW -->
+                <section id="settings-view" class="view-section">
+                    <div class="page-header-container">
+                        <div>
+                            <h2 class="page-title">Profile & System Settings</h2>
+                            <div class="breadcrumb-nav">
+                                <a href="#">Home</a> <i class="fa-solid fa-chevron-right mx-1 fs-8"></i> <span>Settings</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-lg-4">
+                            <div class="card-custom text-center">
+                                <img src="https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=150&auto=format&fit=crop&q=80" class="rounded-circle mb-3 border border-4 border-danger" width="110" height="110" alt="Avatar">
+                                <h4 class="fw-bold mb-1">Dr. Alexander Wright</h4>
+                                <span class="badge bg-danger mb-2">Blood Bank Senior Admin</span>
+                                <p class="text-muted fs-7">Employee ID: <strong>BB-STAFF-9021</strong></p>
+                                <button class="btn btn-sm btn-outline-danger w-100 mb-2" onclick="App.showToast('Profile', 'Profile picture update feature triggered', 'info')">Change Profile Photo</button>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-8">
+                            <div class="card-custom">
+                                <h5 class="fw-bold mb-3">Staff Profile Details</h5>
+                                <form onsubmit="event.preventDefault(); App.showToast('Saved', 'Profile updated successfully!', 'success');">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fs-7 fw-semibold">Full Name</label>
+                                            <input type="text" class="form-control" value="Dr. Alexander Wright">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fs-7 fw-semibold">Email Address</label>
+                                            <input type="email" class="form-control" value="alexander.wright@lifepulse.org">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fs-7 fw-semibold">Phone Number</label>
+                                            <input type="text" class="form-control" value="+1 (555) 234-8901">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fs-7 fw-semibold">Role</label>
+                                            <input type="text" class="form-control" value="Chief Blood Bank Administrator" readonly>
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger fw-bold">Save Profile Changes</button>
+                                </form>
+
+                                <hr class="my-4">
+
+                                <h5 class="fw-bold mb-3">System Preferences</h5>
+                                <div class="d-flex align-items-center justify-content-between py-2">
+                                    <div>
+                                        <div class="fw-bold fs-7">Dark Mode Theme</div>
+                                        <div class="fs-7 text-muted">Switch interface theme</div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input btn-dark-mode-toggle" type="checkbox" role="switch">
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between py-2">
+                                    <div>
+                                        <div class="fw-bold fs-7">Low Stock Email Alerts</div>
+                                        <div class="fs-7 text-muted">Receive notifications when blood inventory drops below threshold</div>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" role="switch" checked>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+
+            <!-- FOOTER -->
+            <footer class="app-footer">
+                <div>&copy; 2026 <strong>LifePulse Blood Bank Management System</strong>. All rights reserved.</div>
+                <div>Healthcare Inspired UI | Version 2.4.0</div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- MODALS -->
+
+    <!-- 1. Donor Modal -->
+    <div class="modal fade" id="donorModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-header-title fw-bold" id="donorModalTitle">Register New Donor</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="donorForm">
+                        <input type="hidden" id="donorEditId">
+                        <div class="mb-3">
+                            <label class="form-label fs-7 fw-semibold">Full Name *</label>
+                            <input type="text" id="donorNameInput" class="form-control" required placeholder="e.g. John Doe">
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fs-7 fw-semibold">Age *</label>
+                                <input type="number" id="donorAgeInput" class="form-control" value="28" min="18" max="65">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fs-7 fw-semibold">Gender</label>
+                                <select id="donorGenderInput" class="form-select">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fs-7 fw-semibold">Blood Group *</label>
+                                <select id="donorBgInput" class="form-select">
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fs-7 fw-semibold">City</label>
+                                <input type="text" id="donorCityInput" class="form-control" value="New York">
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fs-7 fw-semibold">Phone *</label>
+                                <input type="text" id="donorPhoneInput" class="form-control" placeholder="+1 (555) 000-0000" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fs-7 fw-semibold">Email</label>
+                                <input type="email" id="donorEmailInput" class="form-control" placeholder="donor@email.com">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fs-7 fw-semibold">Eligibility Status</label>
+                            <select id="donorStatusInput" class="form-select">
+                                <option value="Eligible">Eligible</option>
+                                <option value="Resting">Resting</option>
+                                <option value="Ineligible">Ineligible</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger fw-bold" onclick="App.saveDonorForm()">Save Donor Record</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Donor Details View Modal -->
+    <div class="modal fade" id="donorDetailsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4" id="donorDetailsModalContent">
+                    <!-- Rendered dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Register Recipient Modal -->
+    <div class="modal fade" id="recipientModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="fw-bold m-0">Register New Recipient</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label fs-7 fw-semibold">Recipient Name *</label>
+                            <input type="text" id="rcpNameInput" class="form-control" required placeholder="Patient full name">
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fs-7 fw-semibold">Age</label>
+                                <input type="number" id="rcpAgeInput" class="form-control" value="35">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fs-7 fw-semibold">Gender</label>
+                                <select id="rcpGenderInput" class="form-select">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fs-7 fw-semibold">Blood Group Needed *</label>
+                                <select id="rcpBgInput" class="form-select">
+                                    <option value="O+">O+</option>
+                                    <option value="O-">O-</option>
+                                    <option value="A+">A+</option>
+                                    <option value="A-">A-</option>
+                                    <option value="B+">B+</option>
+                                    <option value="B-">B-</option>
+                                    <option value="AB+">AB+</option>
+                                    <option value="AB-">AB-</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fs-7 fw-semibold">Units Required</label>
+                                <input type="number" id="rcpUnitsInput" class="form-control" value="2" min="1" max="10">
+                            </div>
+                        </div>
+                    <div class="mb-3">
+    <label class="form-label fs-7 fw-semibold">Hospital Name *</label>
+    <select id="rcpHospitalInput" class="form-select" required>
+        <option value="">Select Hospital</option>
+    </select>
+</div>
+
+<div class="row g-2 mb-3">
+    <div class="col-6">
+        <label class="form-label fs-7 fw-semibold">Attending Doctor *</label>
+        <select id="rcpDoctorInput" class="form-select" required>
+            <option value="">Select Doctor</option>
+        </select>
+    </div>
+
+    <div class="col-6">
+        <label class="form-label fs-7 fw-semibold">Urgency Priority</label>
+        <select id="rcpPriorityInput" class="form-select">
+            <option value="Normal">Normal</option>
+            <option value="High">High</option>
+            <option value="Emergency">Emergency</option>
+        </select>
+    </div>
+</div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger fw-bold" onclick="App.saveRecipientForm()">Register Recipient</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Update Stock Modal -->
+    <div class="modal fade" id="updateStockModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="fw-bold m-0">Update Blood Stock</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fs-7 fw-semibold">Blood Group</label>
+                        <input type="text" id="modalStockGroup" class="form-control fw-bold" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fs-7 fw-semibold">Units Available</label>
+                        <input type="number" id="modalStockUnits" class="form-control fs-5 fw-bold text-danger">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fs-7 fw-semibold">Target Target Capacity</label>
+                        <input type="number" id="modalStockTarget" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger fw-bold" onclick="App.saveStockModal()">Save Inventory</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Add Hospital Modal -->
+    <div class="modal fade" id="hospitalModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="fw-bold m-0">Add Partner Hospital</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label fs-7 fw-semibold">Hospital Name *</label>
+                            <input type="text" id="hspNameInput" class="form-control" required placeholder="e.g. St. Jude Hospital">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fs-7 fw-semibold">Address</label>
+                            <input type="text" id="hspAddressInput" class="form-control" placeholder="Street & district address">
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label fs-7 fw-semibold">Phone *</label>
+                                <input type="text" id="hspPhoneInput" class="form-control" placeholder="+1 (555) 900-0000" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label fs-7 fw-semibold">Total Bed Count</label>
+                                <input type="number" id="hspBedsInput" class="form-control" value="250">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger fw-bold" onclick="App.saveHospitalForm()">Save Hospital</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Confirmation Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content text-center p-3">
+                <div class="text-danger mb-2">
+                    <i class="fa-solid fa-triangle-exclamation fs-1"></i>
+                </div>
+                <h5 class="fw-bold mb-2" id="confirmModalTitle">Are you sure?</h5>
+                <p class="fs-7 text-muted mb-3" id="confirmModalText">This action cannot be undone.</p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-light flex-fill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger flex-fill fw-bold" id="btnConfirmAction">Yes, Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="fw-bold m-0">Reset Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body fs-7">
+                    <p class="text-muted">Enter your registered staff email address to receive password reset instructions.</p>
+                    <input type="email" class="form-control" placeholder="staff@lifepulse.org">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger fw-bold w-100" data-bs-dismiss="modal" onclick="App.showToast('Reset Link Sent', 'Password reset instructions sent to your email.', 'info')">Send Instructions</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS DEPENDENCIES -->
+    <!-- Bootstrap 5 JS Bundle CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Chart.js 4 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="data.js"></script>
+    <script src="charts.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
