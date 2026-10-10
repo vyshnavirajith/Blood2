@@ -555,6 +555,207 @@ app.get("/api/recipient-form-options", async (req, res) => {
         });
     }
 });
+app.get("/api/dashboard-stats", async (req, res) => {
+    try {
+        const [
+            donors,
+            recipients,
+            stock,
+            hospitals,
+            requests
+        ] = await Promise.all([
+            pool.query(
+                "SELECT COUNT(*)::int AS total FROM DONOR"
+            ),
+            pool.query(
+                "SELECT COUNT(*)::int AS total FROM RECIPIENT"
+            ),
+            pool.query(`
+                SELECT COALESCE(SUM(units_available), 0)::int AS total
+                FROM BLOOD_STOCK
+            `),
+            pool.query(
+                "SELECT COUNT(*)::int AS total FROM HOSPITAL"
+            ),
+            pool.query(`
+                SELECT
+                    COUNT(*) FILTER (
+                        WHERE status = 'Pending'
+                    )::int AS pending,
+                    COUNT(*) FILTER (
+                        WHERE status = 'Approved'
+                    )::int AS approved
+                FROM BLOOD_REQUEST
+            `)
+        ]);
+
+        res.json({
+            totalDonors: donors.rows[0].total,
+            totalRecipients: recipients.rows[0].total,
+            totalUnits: stock.rows[0].total,
+            totalHospitals: hospitals.rows[0].total,
+            pendingRequests: requests.rows[0].pending,
+            approvedRequests: requests.rows[0].approved
+        });
+
+    } catch (error) {
+        console.error("Dashboard statistics error:", error);
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to load dashboard statistics"
+        });
+    }
+});
+
+        
+app.get("/api/dashboard-stats", async (req, res) => {
+    try {
+        const [
+            donors,
+            recipients,
+            stock,
+            hospitals,
+            requests
+        ] = await Promise.all([
+            pool.query("SELECT COUNT(*)::int AS total FROM DONOR"),
+            pool.query("SELECT COUNT(*)::int AS total FROM RECIPIENT"),
+            pool.query(`
+                SELECT COALESCE(SUM(units_available), 0)::int AS total
+                FROM BLOOD_STOCK
+            `),
+            pool.query("SELECT COUNT(*)::int AS total FROM HOSPITAL"),
+            pool.query(`
+                SELECT
+                    COUNT(*) FILTER (
+                        WHERE status = 'Pending'
+                    )::int AS pending,
+                    COUNT(*) FILTER (
+                        WHERE status = 'Approved'
+                    )::int AS approved
+                FROM BLOOD_REQUEST
+            `)
+        ]);
+
+        res.json({
+            totalDonors: donors.rows[0].total,
+            totalRecipients: recipients.rows[0].total,
+            totalUnits: stock.rows[0].total,
+            totalHospitals: hospitals.rows[0].total,
+            pendingRequests: requests.rows[0].pending,
+            approvedRequests: requests.rows[0].approved
+        });
+
+    } catch (error) {
+        console.error("Dashboard statistics error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to load dashboard statistics"
+        });
+    }
+});
+app.get("/api/latest-blood-requests", async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT
+                br.request_id,
+                br.blood_group_code,
+                br.units_needed,
+                br.priority,
+                br.request_date,
+                br.status,
+                r.name AS recipient_name,
+                h.name AS hospital_name
+            FROM BLOOD_REQUEST br
+            JOIN RECIPIENT r
+                ON br.recipient_id = r.recipient_id
+            JOIN HOSPITAL h
+                ON br.hospital_id = h.hospital_id
+            ORDER BY br.request_date DESC, br.request_id DESC
+            LIMIT 5
+        `);
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Latest blood requests error:", error);
+        res.status(500).json({
+            message: "Failed to load latest blood requests"
+        });
+    }
+});
+app.get("/api/requests", async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT
+                br.request_id,
+                br.recipient_id,
+                br.hospital_id,
+                br.blood_group_code,
+                br.units_needed,
+                br.priority,
+                br.request_date,
+                br.status,
+                br.processed_by_staff_id,
+                r.name AS recipient_name,
+                h.name AS hospital_name
+            FROM BLOOD_REQUEST br
+            JOIN RECIPIENT r
+                ON br.recipient_id = r.recipient_id
+            JOIN HOSPITAL h
+                ON br.hospital_id = h.hospital_id
+            ORDER BY br.request_date DESC, br.request_id DESC
+        `);
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error("Fetch blood requests error:", error);
+        res.status(500).json({
+            message: "Failed to fetch blood requests"
+        });
+    }
+});
+app.put("/api/requests/:id/status", async (req, res) => {
+    try {
+        const requestId = Number(req.params.id);
+        const { status } = req.body;
+
+        if (!Number.isInteger(requestId) || requestId <= 0) {
+            return res.status(400).json({
+                message: "Invalid request ID"
+            });
+        }
+
+        if (!["Approved", "Rejected"].includes(status)) {
+            return res.status(400).json({
+                message: "Status must be Approved or Rejected"
+            });
+        }
+
+        const result = await pool.query(
+            `UPDATE BLOOD_REQUEST
+             SET status = $1
+             WHERE request_id = $2
+             RETURNING request_id, status`,
+            [status, requestId]
+        );
+
+        if (result.rowCount === 0) {
+            return res.status(404).json({
+                message: "Blood request not found"
+            });
+        }
+
+        res.json({
+            message: `Request ${status.toLowerCase()} successfully`,
+            request: result.rows[0]
+        });
+    } catch (error) {
+        console.error("Update blood request error:", error);
+        res.status(500).json({
+            message: "Failed to update blood request"
+        });
+    }
+});
 // Start server
 const PORT = 5000;
 
